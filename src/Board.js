@@ -18,6 +18,18 @@
       }
     },
 
+    canSetRookAtLocation: function(row, col) {
+      var init = this.get(row)[col];
+      this.get(row)[col] = 1;
+      var conflict = this.hasAnyRooksConflicts();
+      this.get(row)[col] = 0;
+      return !conflict;
+    },
+
+    setAtLocation: function(row, col) {
+      this.get(row)[col] = 1;
+    },
+
     rows: function() {
       return _(_.range(this.get('n'))).map(function(rowIndex) {
         return this.get(rowIndex);
@@ -128,6 +140,7 @@
     //
     // test if a specific major diagonal on this board contains a conflict
     hasMajorDiagonalConflictAt: function(startIndex) {
+      startIndex = Math.abs(startIndex);
       var rows = this.rows();
       var conflicts = _.range(startIndex, rows.length).reduce(function(mem, i) {
         return [mem[0] + rows[i][i - startIndex], mem[1] + rows[i - startIndex][i]];
@@ -153,11 +166,8 @@
     //
     // test if a specific minor diagonal on this board contains a conflict
     hasMinorDiagonalConflictAt: function(startIndex) {
+      startIndex = Math.abs(startIndex);
       var rows = this.rows();
-      [0, 1, 2, 3];
-      [1, 2, 3];
-      [2, 3];
-      [3];
       var conflicts = _.range(0, rows.length - startIndex).reduce(function(mem, i) {
         // console.log(`row: ${i}, col: ${rows.length - 1 - i - startIndex}, val: ${rows[i][rows.length - 1 - i - startIndex]}`);
         // console.log(`row: ${i + startIndex}, col: ${rows.length - i - 1}, val: ${rows[i + startIndex][rows.length - i - 1]}`);
