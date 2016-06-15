@@ -28,11 +28,10 @@
       var columns = [];
       _(_.range(this.get('n'))).map(function(rowIndex) {
         this.get(rowIndex).forEach(function(element, index) {
-          if (columns[index] !== undefined) {
-            columns[index].push(element);
-          } else {
-            columns[index] = [element];
+          if (columns[index] === undefined) {
+            columns[index] = [];
           }
+          columns[index].push(element);
         });
       }, this);
       return columns;
@@ -93,17 +92,15 @@
     //
     // test if a specific row on this board contains a conflict
     hasRowConflictAt: function(rowIndex) {
-
       return this.rows()[rowIndex].reduce((mem, element) => mem + element, 0) > 1 ? true : false;
     },
 
     // test if any rows on this board contain conflicts
     hasAnyRowConflicts: function() {
       var matrix = this.rows();
-      var that = this;
       this.hasRowConflictAt(0);
       return _(matrix).reduce((mem, row, rowIndex) => {
-        return mem ? mem : this.hasRowConflictAt.bind(that)(rowIndex);
+        return mem ? mem : this.hasRowConflictAt(rowIndex);
       }, false);
     },
 
@@ -114,14 +111,15 @@
     //
     // test if a specific column on this board contains a conflict
     hasColConflictAt: function(colIndex) {
-
-      return false; // fixme
+      return this.columns()[colIndex].reduce((mem, element) => mem + element, 0) > 1 ? true : false;
     },
-
     // test if any columns on this board contain conflicts
     hasAnyColConflicts: function() {
-      console.log(this.columns());
-      return false; // fixme
+      var matrix = this.columns();
+      this.hasColConflictAt(0);
+      return _(matrix).reduce((mem, row, colIndex) => {
+        return mem ? mem : this.hasColConflictAt(colIndex);
+      }, false);
     },
 
 
