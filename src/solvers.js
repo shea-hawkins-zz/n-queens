@@ -94,16 +94,24 @@ window.findNQueensSolution = function(n, board, x, y, pruned) {
 
   if (n > 0) {
     for (var row = x; row < board.rows().length; row++) {
+
+      // if the target row is in the prunedRows as true
+      // increment the row and skip forward.
       for (var col = y; col < board.rows().length; col++) {
+        // ''
+        // if the target row, column -(row - column == dia) in the pruned diagonal 
+        // col++
         var canSet = board.canSetAtLocation(row, col, 'queen');
         if (canSet) {
           board.setAtLocation(row, col);
-          solutions = findNQueensSolution(n - 1, board, row, col);
+          pruned['row'][row] = true;
+          solutions = findNQueensSolution(n - 1, board, row, col, pruned);
           if (solutions !== undefined && solutions.length > 0) {
             return solutions;
           }
 
           board.unSetAtLocation(row, col);
+          pruned['row'][row] = false;
         }
       }
       y = 0;
@@ -127,7 +135,8 @@ window.countNQueensSolutions = function(n, board, x, y, pruned) {
     var pruned = {
       row: {},
       col: {},
-      diag: {}
+      majDiag: {},
+      minDiag: {}
     };
     var matrix = _.range(n).map(val => _.range(n).map(() => 0));
     var board = new Board(matrix); 
@@ -143,16 +152,20 @@ window.countNQueensSolutions = function(n, board, x, y, pruned) {
       //debugger;
       for (var col = y; col < board.rows().length; col++) {
         if (pruned['row'][row]) { break; }
-        var isAValidCol = !pruned['col'][col];
-        if (isAValidCol) {
-          var canSet = board.canSetAtLocation(row, col, 'queen');
-          if (canSet) {
-            board.setAtLocation(row, col);
-            pruned['row'][row] = true;
-            solutions = solutions.concat(countNQueensSolutions(n - 1, board, row, col, pruned));
-            board.unSetAtLocation(row, col);
-            pruned['row'][row] = false;
-          }
+        var minDiag = (board.rows().length - 1 - row - col);
+        var majDiag = (col - row);
+        if (!pruned['col'][col] && !pruned['majDiag'][majDiag] && !pruned['minDiag'][minDiag]) {
+          board.setAtLocation(row, col);
+          pruned['row'][row] = true;
+          pruned['col'][col] = true;
+          pruned['minDiag'][minDiag] = true;
+          pruned['majDiag'][majDiag] = true;
+          solutions = solutions.concat(countNQueensSolutions(n - 1, board, row, col, pruned));
+          board.unSetAtLocation(row, col);
+          pruned['row'][row] = false;
+          pruned['minDiag'][minDiag] = false;
+          pruned['majDiag'][majDiag] = false;
+          pruned['col'][col] = false;
         }
         // ''
         // if the target row, column -(row - column == dia) in the pruned diagonal 
