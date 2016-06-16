@@ -71,12 +71,18 @@ window.countNRooksSolutions = function(n, board, x, y) {
 };
 
 // return a matrix (an array of arrays) representing a single nxn chessboard, with n queens placed such that none of them can attack each other
-window.findNQueensSolution = function(n, board, x, y) {
+window.findNQueensSolution = function(n, board, x, y, pruned) {
   var numSolutions = 0;
   var solutions = [];
+
   if (!board) {
     x = 0;
     y = 0;
+    var pruned = {
+      row: {},
+      col: {},
+      diag: {}
+    };
     var matrix = _.range(n).map(val => _.range(n).map(() => 0));
     var board = new Board(matrix); 
     if (n === 0) {
@@ -111,13 +117,18 @@ window.findNQueensSolution = function(n, board, x, y) {
 };
 
 // return the number of nxn chessboards that exist, with n queens placed such that none of them can attack each other
-window.countNQueensSolutions = function(n, board, x, y) {
+window.countNQueensSolutions = function(n, board, x, y, pruned) {
     // var solutionCount = undefined; //fixme
   var numSolutions = 0;
   var solutions = [];
   if (!board) {
     x = 0;
     y = 0;
+    var pruned = {
+      row: {},
+      col: {},
+      diag: {}
+    };
     var matrix = _.range(n).map(val => _.range(n).map(() => 0));
     var board = new Board(matrix); 
     if (n === 0) {
@@ -126,14 +137,29 @@ window.countNQueensSolutions = function(n, board, x, y) {
   }
   if (n > 0) {
     for (var row = x; row < board.rows().length; row++) {
+
+      // if the target row is in the prunedRows as true
+      // increment the row and skip forward.
+      //debugger;
       for (var col = y; col < board.rows().length; col++) {
-        var canSet = board.canSetAtLocation(row, col, 'queen');
-        if (canSet) {
-          board.setAtLocation(row, col);
-          solutions = solutions.concat(countNQueensSolutions(n - 1, board, row, col));
-          board.unSetAtLocation(row, col);
+        if (pruned['row'][row]) { break; }
+        var isAValidCol = !pruned['col'][col];
+        if (isAValidCol) {
+          var canSet = board.canSetAtLocation(row, col, 'queen');
+          if (canSet) {
+            board.setAtLocation(row, col);
+            pruned['row'][row] = true;
+            solutions = solutions.concat(countNQueensSolutions(n - 1, board, row, col, pruned));
+            board.unSetAtLocation(row, col);
+            pruned['row'][row] = false;
+          }
         }
+        // ''
+        // if the target row, column -(row - column == dia) in the pruned diagonal 
+        // col++
+        
       }
+      // returns to the beginning of the row
       y = 0;
     }
     if (n === board.rows().length) {
