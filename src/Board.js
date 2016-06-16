@@ -18,13 +18,18 @@
       }
     },
 
-    canSetRookAtLocation: function(row, col) {
+    canSetAtLocation: function(row, col, type) {
+
       var init = this.get(row)[col];
       if (init === 1) {
         return false;
       }
       this.get(row)[col] = 1;
-      var conflict = this.hasAnyRooksConflicts();
+      if (type === 'rook') {
+        var conflict = this.hasAnyRooksConflicts();
+      } else if (type === 'queen') {
+        var conflict = this.hasAnyQueensConflicts();
+      }
       this.get(row)[col] = 0;
       return !conflict;
     },
