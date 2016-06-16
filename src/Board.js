@@ -20,6 +20,9 @@
 
     canSetRookAtLocation: function(row, col) {
       var init = this.get(row)[col];
+      if (init === 1) {
+        return false;
+      }
       this.get(row)[col] = 1;
       var conflict = this.hasAnyRooksConflicts();
       this.get(row)[col] = 0;
@@ -28,6 +31,10 @@
 
     setAtLocation: function(row, col) {
       this.get(row)[col] = 1;
+    },
+
+    unSetAtLocation: function(row, col) {
+      this.get(row)[col] = 0;
     },
 
     rows: function() {
