@@ -137,30 +137,33 @@ window.countNQueensSolutions = function(n) {
     
     //After worker 1 and 2 report back solutions, add them together, multiply by 2, and add worker 3 if applic.
     // SOLUTIONS!
-    var workerLeft = new Worker('queenWorker.js');
-    var workerMid = new Worker('queenWorker.js');
-    var workerRight = new Worker('queenWorker.js');
-
+    var workerLeft = new Worker('src/queenWorker.js');
+    var workerMid = new Worker('src/queenWorker.js');
+    var workerRight = new Worker('src/queenWorker.js');
+    workerLeft.onerror = function(event) {
+      console.log(event);
+      //throw new Error(event.message + " (" + event.filename + ":" + event.lineno + ")");
+    };
     var midWorkerSol = 0;
     var leftWorkerSol = 0;
     var rightWorkerSol = 0;
     if (n % 2 !== 0) {
-      workerMid.postMessage({n: n, min: Math.floor(n / 2), max: Math.floor(n / 2) + 1});
-      workerMid.onMessage(function(count) {
-        midWorkerSol = count;
+      workerMid.postMessage('message');
+      workerMid.onmessage = function(event) {
+        midWorkerSol = event.data;
         console.log('mid' + midWorkerSol);
-      });
+      };
     }
     workerLeft.postMessage({n: n, min: 0, max: Math.ceil(Math.floor(n / 2) / 2)});
-    workerLeft.onMessage(function(count) {
-      leftWorkerSol = count;
+    workerLeft.onmessage = function(count) {
+      leftWorkerSol = count.data;
       console.log('left' + leftWorkerSol);
-    });
+    };
     workerRight.postMessage({n: n, min: Math.ceil(Math.floor(n / 2) / 2), max: Math.floor(n / 2)});
-    workerRight.onMessage(function(count) {
-      rightWorkerSol = count;
+    workerRight.onmessage = function(count) {
+      rightWorkerSol = count.data;
       console.log('right' + rightWorkerSol);
-    });
+    };
     var totalSolution = ( + rightWorkerSol) * 2;
     return totalSolution + midWorkerSol;
   };

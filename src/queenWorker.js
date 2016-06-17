@@ -1,5 +1,6 @@
 
-onmessage = function(n, min, max) {
+onmessage = function(message) {
+
   var findSolutionsForColumnRange = function(n, min, max) {
     var setPrunes = function(row, col) {
       var minDiag = (board.rows().length - 1 - row - col);
@@ -54,5 +55,8 @@ onmessage = function(n, min, max) {
     }      
     return solutionsCount;
   }; 
+  var n = message.data.n;
+  var min = message.data.min;
+  var max = message.data.max;
   postMessage(findSolutionsForColumnRange(n, min, max));
 };
