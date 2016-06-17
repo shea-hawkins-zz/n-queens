@@ -137,73 +137,38 @@ window.countNQueensSolutions = function(n) {
     
     //After worker 1 and 2 report back solutions, add them together, multiply by 2, and add worker 3 if applic.
     // SOLUTIONS!
-    var midWorkerSolution = 0;
+    var workerLeft = new Worker('queenWorker.js');
+    var workerMid = new Worker('queenWorker.js');
+    var workerRight = new Worker('queenWorker.js');
+
+    var midWorkerSol = 0;
+    var leftWorkerSol = 0;
+    var rightWorkerSol = 0;
     if (n % 2 !== 0) {
-      midWorkerSol = findSolutionsForColumnRange(n, Math.floor(n / 2), Math.floor(n / 2) + 1);
+      workerMid.postMessage({n: n, min: Math.floor(n / 2), max: Math.floor(n / 2) + 1});
+      workerMid.onMessage(function(count) {
+        midWorkerSol = count;
+        console.log('mid' + midWorkerSol);
+      });
     }
-    var leftWorkerSol = findSolutionsForColumnRange(n, 0, Math.ceil(Math.floor(n / 2) / 2) + 1);
-    var rightWorkerSol = findSolutionsForColumnRange(n, Math.ceil(Math.floor(n / 2) / 2 + 1, Math.floor(n / 2)));
-    var totalSolution = (leftWorkerSol + rightWorkerSol) * 2;
+    workerLeft.postMessage({n: n, min: 0, max: Math.ceil(Math.floor(n / 2) / 2)});
+    workerLeft.onMessage(function(count) {
+      leftWorkerSol = count;
+      console.log('left' + leftWorkerSol);
+    });
+    workerRight.postMessage({n: n, min: Math.ceil(Math.floor(n / 2) / 2), max: Math.floor(n / 2)});
+    workerRight.onMessage(function(count) {
+      rightWorkerSol = count;
+      console.log('right' + rightWorkerSol);
+    });
+    var totalSolution = ( + rightWorkerSol) * 2;
     return totalSolution + midWorkerSol;
   };
 
-  var findSolutionsForColumnRange = function(n, min, max) {
-    var setPrunes = function(row, col) {
-      var minDiag = (board.rows().length - 1 - row - col);
-      var majDiag = (col - row);
-      pruned['col'][col] = true;
-      pruned['minDiag'][minDiag] = true;
-      pruned['majDiag'][majDiag] = true;
-    };
 
 
-    var unSetPrunes = function(row, col) {
-      var minDiag = (board.rows().length - 1 - row - col);
-      var majDiag = (col - row);
-      pruned['minDiag'][minDiag] = false;
-      pruned['majDiag'][majDiag] = false;
-      pruned['col'][col] = false;
-    };
-
-    var findSolutions = function(n, board, row, pruned, callback) {
-      if (row === n) {
-        return callback();
-      }
-      for (var col = 0; col < board.rows().length; col++) {
-        var minDiag = (board.rows().length - 1 - row - col);
-        var majDiag = (col - row);
-        if (!pruned['col'][col] && !pruned['majDiag'][majDiag] && !pruned['minDiag'][minDiag]) {
-          setPrunes(row, col);
-          board.setAtLocation(row, col);
-          findSolutions(n, board, row + 1, pruned, callback);
-          board.unSetAtLocation(row, col);
-          unSetPrunes(row, col);
-        }
-      }
-    };
-
-    var solutionsCount = 0;
-    var board = new Board({n: n});
-    var pruned = {
-      row: {},
-      col: {},
-      majDiag: {},
-      minDiag: {}
-    };
-    for (var i = min; i < max; i++) {
-      board.setAtLocation(0, i);
-      setPrunes(0, i);
-      findSolutions(n, board, 1, pruned, function() {
-        solutionsCount++;
-      });
-      board.unSetAtLocation(0, i);
-      unSetPrunes(0, i);
-    }      
-    return solutionsCount;
-  };
-
-  if (n === 0) {
+  if (n === 0 || n === 1) {
     return 1;
   }
-  return findSolutionsForColumnRange(n, 0, n);
+  return parallelSolutionFinder(8);
 };
