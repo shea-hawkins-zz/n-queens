@@ -1,7 +1,7 @@
 
 onmessage = function(message) {
 
-  var findSolutionsForColumnRange = function(n, min, max) {
+  var findSolutionsForColumnRange = function(n, min, max, board) {
     var setPrunes = function(row, col) {
       var minDiag = (board.rows().length - 1 - row - col);
       var majDiag = (col - row);
@@ -37,7 +37,6 @@ onmessage = function(message) {
     };
 
     var solutionsCount = 0;
-    var board = new Board({n: n});
     var pruned = {
       row: {},
       col: {},
@@ -58,5 +57,9 @@ onmessage = function(message) {
   var n = message.data.n;
   var min = message.data.min;
   var max = message.data.max;
-  postMessage(findSolutionsForColumnRange(n, min, max));
+  var board = message.data.board;
+  debugger;
+  var numSol = findSolutionsForColumnRange(n, min, max, board);
+
+  postMessage('alive');
 };

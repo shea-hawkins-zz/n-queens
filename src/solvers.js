@@ -154,12 +154,12 @@ window.countNQueensSolutions = function(n) {
         console.log('mid' + midWorkerSol);
       };
     }
-    workerLeft.postMessage({n: n, min: 0, max: Math.ceil(Math.floor(n / 2) / 2)});
+    workerLeft.postMessage({n: n, min: 0, max: Math.ceil(Math.floor(n / 2) / 2), board: new Board({n: n})});
     workerLeft.onmessage = function(count) {
       leftWorkerSol = count.data;
       console.log('left' + leftWorkerSol);
     };
-    workerRight.postMessage({n: n, min: Math.ceil(Math.floor(n / 2) / 2), max: Math.floor(n / 2)});
+    workerRight.postMessage({n: n, min: Math.ceil(Math.floor(n / 2) / 2), max: Math.floor(n / 2), board: new Board({n: n})});
     workerRight.onmessage = function(count) {
       rightWorkerSol = count.data;
       console.log('right' + rightWorkerSol);
