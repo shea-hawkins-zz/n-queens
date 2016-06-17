@@ -127,39 +127,83 @@ window.findNQueensSolution = function(n, board, x, y, pruned) {
 // return the number of nxn chessboards that exist, with n queens placed such that none of them can attack each other
 window.countNQueensSolutions = function(n) {
     // var solutionCount = undefined; //fixme
-  var findSolutions = function(n, board, row, pruned, callback) {
-    if (row === n) {
-      return callback();
+
+  var parallelSolutionFinder = function(n) {
+    // if n mod 2 doesn't = zero
+      // Then we have a third worker that calculates the number of solutions at ceil(n / 2)
+
+    // start worker 1 finding solutions for boards where the first row has a piece at the first position to Math.ceil(Math.floor(n / 2) / 2)
+    // worker 2 does above for Math.ceil(Math.floor(n/2) / 2) + 1 to Math.floor(n/2)
+    
+    //After worker 1 and 2 report back solutions, add them together, multiply by 2, and add worker 3 if applic.
+    // SOLUTIONS!
+    var midWorkerSolution = 0;
+    if (n % 2 !== 0) {
+      midWorkerSol = findSolutionsForColumnRange(n, Math.floor(n / 2), Math.floor(n / 2) + 1);
     }
-    for (var col = 0; col < board.rows().length; col++) {
+    var leftWorkerSol = findSolutionsForColumnRange(n, 0, Math.ceil(Math.floor(n / 2) / 2) + 1);
+    var rightWorkerSol = findSolutionsForColumnRange(n, Math.ceil(Math.floor(n / 2) / 2 + 1, Math.floor(n / 2)));
+    var totalSolution = (leftWorkerSol + rightWorkerSol) * 2;
+    return totalSolution + midWorkerSol;
+  };
+
+  var findSolutionsForColumnRange = function(n, min, max) {
+    var setPrunes = function(row, col) {
       var minDiag = (board.rows().length - 1 - row - col);
       var majDiag = (col - row);
-      if (!pruned['col'][col] && !pruned['majDiag'][majDiag] && !pruned['minDiag'][minDiag]) {
-        board.setAtLocation(row, col);
-        pruned['col'][col] = true;
-        pruned['minDiag'][minDiag] = true;
-        pruned['majDiag'][majDiag] = true;
-        findSolutions(n, board, row + 1, pruned, callback);
-        board.unSetAtLocation(row, col);
-        pruned['minDiag'][minDiag] = false;
-        pruned['majDiag'][majDiag] = false;
-        pruned['col'][col] = false;
+      pruned['col'][col] = true;
+      pruned['minDiag'][minDiag] = true;
+      pruned['majDiag'][majDiag] = true;
+    };
+
+
+    var unSetPrunes = function(row, col) {
+      var minDiag = (board.rows().length - 1 - row - col);
+      var majDiag = (col - row);
+      pruned['minDiag'][minDiag] = false;
+      pruned['majDiag'][majDiag] = false;
+      pruned['col'][col] = false;
+    };
+
+    var findSolutions = function(n, board, row, pruned, callback) {
+      if (row === n) {
+        return callback();
       }
-    }
+      for (var col = 0; col < board.rows().length; col++) {
+        var minDiag = (board.rows().length - 1 - row - col);
+        var majDiag = (col - row);
+        if (!pruned['col'][col] && !pruned['majDiag'][majDiag] && !pruned['minDiag'][minDiag]) {
+          setPrunes(row, col);
+          board.setAtLocation(row, col);
+          findSolutions(n, board, row + 1, pruned, callback);
+          board.unSetAtLocation(row, col);
+          unSetPrunes(row, col);
+        }
+      }
+    };
+
+    var solutionsCount = 0;
+    var board = new Board({n: n});
+    var pruned = {
+      row: {},
+      col: {},
+      majDiag: {},
+      minDiag: {}
+    };
+    for (var i = min; i < max; i++) {
+      board.setAtLocation(0, i);
+      setPrunes(0, i);
+      findSolutions(n, board, 1, pruned, function() {
+        solutionsCount++;
+      });
+      board.unSetAtLocation(0, i);
+      unSetPrunes(0, i);
+    }      
+    return solutionsCount;
   };
-  var solutionCount = 0;
-  var pruned = {
-    row: {},
-    col: {},
-    majDiag: {},
-    minDiag: {}
-  };
-  var board = new Board({ n: n }); 
+
   if (n === 0) {
-    return 1;      
-  } 
-  findSolutions(n, board, 0, pruned, function() {
-    solutionCount++;
-  });
-  return solutionCount++;
+    return 1;
+  }
+  return findSolutionsForColumnRange(n, 0, n);
 };
